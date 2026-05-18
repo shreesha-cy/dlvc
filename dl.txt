@@ -1,1 +1,1016 @@
-This is dl.txt
+1.import numpy as np
+
+np.random.seed(42)
+N = 3
+
+# Initial weights
+hebb_w = np.random.rand(N, N)
+perc_w = np.random.rand(N)
+delta_w = np.random.rand(N, N)
+corr_w = np.random.rand(N, N)
+out_w = np.random.rand(N, N)
+
+# Input and targets
+x = np.array([1.0, 0.5, -1.0])
+t = 1
+t_vec = np.array([0.8, 0.2, 0.6])
+d = np.array([1.0, 0.0, 1.0])
+
+lr = 0.1
+
+# 1. Hebbian Learning
+hebb_w = hebb_w + np.outer(x, x)
+
+# 2. Perceptron Learning
+pred = 1 if np.dot(perc_w, x) >= 0 else -1
+error = t - pred
+perc_w = perc_w + lr * error * x
+
+# 3. Delta Learning
+error = t_vec - delta_w @ x
+delta_w = delta_w + lr * np.outer(error, x)
+
+# 4. Correlation Learning
+corr_w = corr_w + lr * np.outer(x, d)
+
+# 5. Outstar Learning
+out_w = out_w + lr * np.outer(x - out_w @ x, x)
+
+# Printing outputs
+print("Hebbian Weights:\n", np.round(hebb_w, 4))
+print("\nPerceptron Weights:\n", np.round(perc_w, 4))
+print("\nDelta Weights:\n", np.round(delta_w, 4))
+print("\nCorrelation Weights:\n", np.round(corr_w, 4))
+print("\nOutstar Weights:\n", np.round(out_w, 4))
+=========================================================================================================================
+2.import numpy as np
+import matplotlib.pyplot as plt
+
+# Activation Functions
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def tanh_fn(x):
+    return np.tanh(x)
+
+def relu(x):
+    return np.maximum(0, x)
+
+def leaky_relu(x):
+    return np.maximum(0.1 * x, x)
+
+def softmax(x):
+    e = np.exp(x - np.max(x))
+    return e / np.sum(e)
+
+# Input values
+x = np.linspace(-10, 10, 100)
+
+# Plotting
+plt.figure(figsize=(12, 8))
+
+# Sigmoid
+plt.subplot(2,3,1)
+plt.plot(x, sigmoid(x))
+plt.title("Sigmoid")
+plt.grid()
+
+# Tanh
+plt.subplot(2,3,2)
+plt.plot(x, tanh_fn(x))
+plt.title("Tanh")
+plt.grid()
+
+# ReLU
+plt.subplot(2,3,3)
+plt.plot(x, relu(x))
+plt.title("ReLU")
+plt.grid()
+
+# Leaky ReLU
+plt.subplot(2,3,4)
+plt.plot(x, leaky_relu(x))
+plt.title("Leaky ReLU")
+plt.grid()
+
+# Softmax
+sample = np.array([2.0, 1.0, 0.5])
+out = softmax(sample)
+
+plt.subplot(2,3,5)
+plt.bar(["A", "B", "C"], out)
+plt.title("Softmax")
+
+plt.tight_layout()
+plt.show()
+=======================================================================================
+
+3.import numpy as np
+
+# Weights and bias
+w = [0.2, 0.4, 0.2]
+b = -0.5
+
+# Inputs
+X = [
+    [1, 1, 1],
+    [1, 0, 1],
+    [0, 1, 1],
+    [1, 1, 0]
+]
+
+# Actual outputs
+y = [1, 0, 0, 1]
+
+correct = 0
+
+for i in range(len(X)):
+
+    # Net input
+    net = np.dot(X[i], w) + b
+
+    # Step function
+    if net >= 0:
+        pred = 1
+    else:
+        pred = 0
+
+    print("Input:", X[i])
+    print("Output:", pred)
+
+    # Accuracy check
+    if pred == y[i]:
+        correct += 1
+
+# Accuracy
+accuracy = (correct / len(X)) * 100
+print("\nAccuracy:", accuracy, "%")
+=========================================================================================================
+4.import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+
+from tensorflow.keras.preprocessing.image import (
+    ImageDataGenerator,
+    img_to_array,
+    load_img
+)
+
+from skimage import io, exposure, filters
+
+# --------------------------------
+# Data Augmentation
+# --------------------------------
+datagen = ImageDataGenerator(
+    rotation_range = 20,
+    width_shift_range = 0.1,
+    height_shift_range = 0.1,
+    shear_range = 0.2,
+    zoom_range = 0.2,
+    horizontal_flip = True,
+    vertical_flip = True,
+    fill_mode = 'nearest'
+)
+
+# Load Image
+img = load_img('ac.jpg')
+
+x = img_to_array(img)
+
+x = np.expand_dims(x, axis=0)
+
+# Generate Augmented Images
+num_images = 10
+
+augmented_images = []
+
+for i, batch in enumerate(datagen.flow(x, batch_size=1)):
+
+    augmented_images.append(batch[0])
+
+    if i >= num_images - 1:
+        break
+
+# Display Images
+plt.figure(figsize=(15,6))
+
+plt.subplot(1, num_images + 1, 1)
+
+plt.imshow(img)
+
+plt.title('Original Image')
+
+plt.axis('off')
+
+for i in range(num_images):
+
+    plt.subplot(1, num_images + 1, i + 2)
+
+    plt.imshow(augmented_images[i] / 255.0)
+
+    plt.title(f'Augmented {i+1}')
+
+    plt.axis('off')
+
+plt.tight_layout()
+
+plt.show()
+
+# --------------------------------
+# Histogram Equalization
+# --------------------------------
+input_img = io.imread('ac.jpg', as_gray=True)
+
+img_eq = exposure.equalize_hist(input_img)
+
+gray_image = (input_img * 255).astype(np.uint8)
+
+plt.figure(figsize=(12,6))
+
+plt.subplot(1,2,1)
+
+plt.imshow(input_img, cmap='gray')
+
+plt.title('Original Image')
+
+plt.axis('off')
+
+plt.subplot(1,2,2)
+
+plt.imshow(img_eq, cmap='gray')
+
+plt.title('Histogram Equalized Image')
+
+plt.axis('off')
+
+plt.tight_layout()
+
+plt.show()
+
+# --------------------------------
+# Thresholding and Edge Detection
+# --------------------------------
+thresh_value = filters.threshold_otsu(gray_image)
+
+binary_image_bool = gray_image > thresh_value
+
+edge_image = filters.sobel(input_img)
+
+plt.figure(figsize=(12,6))
+
+plt.subplot(1,2,1)
+
+plt.imshow(binary_image_bool, cmap='gray')
+
+plt.title('Otsu Thresholding')
+
+plt.axis('off')
+
+plt.subplot(1,2,2)
+
+plt.imshow(edge_image, cmap='gray')
+
+plt.title('Edge Detection (Sobel)')
+
+plt.axis('off')
+
+plt.tight_layout()
+
+plt.show()
+
+# --------------------------------
+# Morphological Operations
+# --------------------------------
+ret, binary_image = cv2.threshold(
+    gray_image,
+    thresh_value,
+    255,
+    cv2.THRESH_BINARY
+)
+
+kernel = np.ones((5,5), np.uint8)
+
+eroded_img_bin = cv2.erode(
+    binary_image,
+    kernel,
+    iterations=1
+)
+
+dilated_image_bin = cv2.dilate(
+    binary_image,
+    kernel,
+    iterations=1
+)
+
+plt.figure(figsize=(12,6))
+
+plt.subplot(1,2,1)
+
+plt.imshow(eroded_img_bin, cmap='gray')
+
+plt.title('Eroded Binary Image')
+
+plt.axis('off')
+
+plt.subplot(1,2,2)
+
+plt.imshow(dilated_image_bin, cmap='gray')
+
+plt.title('Dilated Binary Image')
+
+plt.axis('off')
+
+plt.tight_layout()
+
+plt.show()
+=================================================================================================================================
+5.import tensorflow as tf
+from tensorflow.keras.datasets import cifar10
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Flatten, Dense
+from sklearn.metrics import accuracy_score, classification_report
+import numpy as np
+
+# Load CIFAR-10 dataset
+(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+
+# Normalize images
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+# Build Softmax Classifier
+model = Sequential([
+    Flatten(input_shape=(32, 32, 3)),
+    Dense(10, activation='softmax')
+])
+
+# Compile model
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# Train model
+model.fit(x_train, y_train, epochs=5, batch_size=64)
+
+# Predictions
+y_pred = model.predict(x_test)
+y_pred_classes = np.argmax(y_pred, axis=1)
+
+# Accuracy
+acc = accuracy_score(y_test, y_pred_classes)
+
+print("Accuracy:", acc)
+
+# Classification Report
+print("\nClassification Report:\n")
+print(classification_report(y_test, y_pred_classes))
+==============================================================================================
+6.import tensorflow as tf
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Flatten, Dense
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Load dataset
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+# Normalize
+x_train = x_train / 255.0
+x_test = x_test / 255.0
+
+# Simple model
+model = Sequential([
+    Flatten(input_shape=(28,28)),
+    Dense(10, activation='softmax')
+])
+
+# Compile
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train
+model.fit(x_train, y_train, epochs=5)
+
+# Predict first image
+pred = model.predict(x_test[:1])
+
+# Show image
+plt.imshow(x_test[0], cmap='gray')
+
+# Show predicted digit
+plt.title(np.argmax(pred))
+
+
+plt.axis('off')
+plt.show()
+=================================================================
+7.import pandas as pd
+import numpy as np
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+
+# Load dataset
+df = pd.read_csv("sonar.csv", header=None)
+
+# Features and target
+X = df.drop(60, axis=1)
+y = pd.get_dummies(df[60], drop_first=True)
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, random_state=42
+)
+
+# =========================
+# Model WITHOUT Dropout
+# =========================
+model = Sequential([
+    Dense(60, activation='relu', input_shape=(60,)),
+    Dense(30, activation='relu'),
+    Dense(15, activation='relu'),
+    Dense(1, activation='sigmoid')
+])
+
+model.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy']
+)
+
+model.fit(X_train, y_train, epochs=100, batch_size=8)
+
+loss, accuracy = model.evaluate(X_test, y_test)
+
+print("Accuracy without Dropout:", accuracy)
+
+y_pred = np.round(model.predict(X_test))
+
+print(classification_report(y_test, y_pred))
+
+# =========================
+# Model WITH Dropout
+# =========================
+model = Sequential([
+    Dense(60, activation='relu', input_shape=(60,)),
+    Dropout(0.5),
+
+    Dense(30, activation='relu'),
+    Dropout(0.5),
+
+    Dense(15, activation='relu'),
+    Dropout(0.5),
+
+    Dense(1, activation='sigmoid')
+])
+
+model.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy']
+)
+
+model.fit(X_train, y_train, epochs=100, batch_size=8)
+
+loss, accuracy = model.evaluate(X_test, y_test)
+
+print("Accuracy with Dropout:", accuracy)
+
+y_pred = np.round(model.predict(X_test))
+
+print(classification_report(y_test, y_pred))
+=====================================================================================
+8.import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import visualkeras
+
+# Input Layer
+inputs = keras.Input(shape=(227, 227, 3))
+
+# -----------------------------
+# First Convolution Block
+# -----------------------------
+x = layers.Conv2D(
+    filters = 96,
+    kernel_size = (11,11),
+    strides = (4,4),
+    activation = 'relu'
+)(inputs)
+
+x = layers.BatchNormalization()(x)
+
+x = layers.MaxPooling2D(
+    pool_size = (3,3),
+    strides = (2,2)
+)(x)
+
+# -----------------------------
+# Second Convolution Block
+# -----------------------------
+x = layers.Conv2D(
+    filters = 256,
+    kernel_size = (5,5),
+    strides = (1,1),
+    padding = 'same',
+    activation = 'relu'
+)(x)
+
+x = layers.BatchNormalization()(x)
+
+x = layers.MaxPooling2D(
+    pool_size = (3,3),
+    strides = (2,2)
+)(x)
+
+# -----------------------------
+# Third Convolution Block
+# -----------------------------
+x = layers.Conv2D(
+    filters = 384,
+    kernel_size = (3,3),
+    strides = (1,1),
+    padding = 'same',
+    activation = 'relu'
+)(x)
+
+x = layers.BatchNormalization()(x)
+
+# -----------------------------
+# Fourth Convolution Block
+# -----------------------------
+x = layers.Conv2D(
+    filters = 384,
+    kernel_size = (3,3),
+    strides = (1,1),
+    padding = 'same',
+    activation = 'relu'
+)(x)
+
+x = layers.BatchNormalization()(x)
+
+# -----------------------------
+# Fifth Convolution Block
+# -----------------------------
+x = layers.Conv2D(
+    filters = 256,
+    kernel_size = (3,3),
+    strides = (1,1),
+    padding = 'same',
+    activation = 'relu'
+)(x)
+
+x = layers.BatchNormalization()(x)
+
+x = layers.MaxPooling2D(
+    pool_size = (3,3),
+    strides = (2,2)
+)(x)
+
+# -----------------------------
+# Flatten Layer
+# -----------------------------
+x = layers.Flatten()(x)
+
+# -----------------------------
+# Fully Connected Layer 1
+# -----------------------------
+x = layers.Dense(
+    units = 4096,
+    activation = 'relu'
+)(x)
+
+x = layers.Dropout(0.5)(x)
+
+# -----------------------------
+# Fully Connected Layer 2
+# -----------------------------
+x = layers.Dense(
+    units = 4096,
+    activation = 'relu'
+)(x)
+
+x = layers.Dropout(0.5)(x)
+
+# -----------------------------
+# Output Layer
+# -----------------------------
+outputs = layers.Dense(
+    units = 10,
+    activation = 'softmax'
+)(x)
+
+# -----------------------------
+# Create Model
+# -----------------------------
+model = keras.Model(
+    inputs = inputs,
+    outputs = outputs
+)
+
+# -----------------------------
+# Compile Model
+# -----------------------------
+optimizer = keras.optimizers.SGD(
+    learning_rate = 0.001
+)
+
+model.compile(
+    optimizer = optimizer,
+    loss = 'sparse_categorical_crossentropy',
+    metrics = ['accuracy']
+)
+
+# -----------------------------
+# Display Model Summary
+# -----------------------------
+model.summary()
+
+# -----------------------------
+# Visualize Architecture
+# -----------------------------
+visualkeras.graph_view(model)
+========================================================================================================
+9.import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+import random
+
+# Song lyrics dataset
+text = """
+hello from the other side
+i must have called a thousand times
+to tell you i am sorry for everything that i have done
+
+we will we will rock you
+buddy you are a boy make a big noise
+playing in the street gonna be a big man someday
+
+let it be let it be
+whisper words of wisdom let it be
+
+here comes the sun
+and i say it is all right
+""".lower()
+
+# Replace newline characters
+text = text.replace("\n", " ")
+
+# Create character mappings
+chars = sorted(list(set(text)))
+
+char_to_idx = {c: i for i, c in enumerate(chars)}
+idx_to_char = {i: c for i, c in enumerate(chars)}
+
+print("Total characters in corpus:", len(text))
+print("Unique characters:", len(chars))
+
+# Sequence settings
+seq_length = 40
+step = 3
+
+input_sequences = []
+target_chars = []
+
+# Create input-output pairs
+for i in range(0, len(text) - seq_length, step):
+
+    seq = text[i:i + seq_length]
+    target = text[i + seq_length]
+
+    input_sequences.append(seq)
+    target_chars.append(target)
+
+print("Number of sequences:", len(input_sequences))
+
+# One-hot encoding
+X = np.zeros(
+    (len(input_sequences), seq_length, len(chars)),
+    dtype=np.float32
+)
+
+y = np.zeros(
+    (len(input_sequences), len(chars)),
+    dtype=np.float32
+)
+
+for i, seq in enumerate(input_sequences):
+
+    for t, ch in enumerate(seq):
+        X[i, t, char_to_idx[ch]] = 1.0
+
+    y[i, char_to_idx[target_chars[i]]] = 1.0
+
+# Build RNN model using LSTM
+model = Sequential([
+    LSTM(128, input_shape=(seq_length, len(chars))),
+    Dense(len(chars), activation="softmax")
+])
+
+# Compile model
+model.compile(
+    loss="categorical_crossentropy",
+    optimizer="adam"
+)
+
+# Display model summary
+model.summary()
+
+# Train model
+model.fit(
+    X,
+    y,
+    batch_size=32,
+    epochs=50,
+    verbose=1
+)
+
+# Function for temperature sampling
+def sample_with_temperature(preds, temperature=1.0):
+
+    preds = np.asarray(preds).astype("float64")
+
+    preds = np.log(preds + 1e-8) / temperature
+
+    exp_preds = np.exp(preds)
+
+    preds = exp_preds / np.sum(exp_preds)
+
+    return np.random.choice(len(preds), p=preds)
+
+# Select random seed text
+start_index = random.randint(0, len(input_sequences) - 1)
+
+seed_text = input_sequences[start_index]
+
+generated = seed_text
+
+print("\nSeed text:")
+print(seed_text)
+
+# Generate lyrics
+for _ in range(300):
+
+    x_pred = np.zeros(
+        (1, seq_length, len(chars)),
+        dtype=np.float32
+    )
+
+    for t, ch in enumerate(seed_text):
+        x_pred[0, t, char_to_idx[ch]] = 1.0
+
+    preds = model.predict(x_pred, verbose=0)[0]
+
+    next_index = sample_with_temperature(
+        preds,
+        temperature=0.8
+    )
+
+    next_char = idx_to_char[next_index]
+
+    generated += next_char
+
+    seed_text = seed_text[1:] + next_char
+
+# Print generated lyrics
+print("\nGenerated Lyrics:\n")
+print(generated)
+===============================================================================
+10.import tensorflow as tf
+from tensorflow.keras.datasets import imdb
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, GRU, Dense
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+# Load Dataset
+(x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=10000)
+
+# Pad Sequences
+x_train = pad_sequences(x_train, maxlen=200)
+x_test = pad_sequences(x_test, maxlen=200)
+
+# Create GRU Model
+model = Sequential([
+    Embedding(input_dim=10000, output_dim=128, input_length=200),
+    GRU(units=64),
+    Dense(units=1, activation='sigmoid')
+])
+
+# Compile Model
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+# Train Model
+model.fit(x_train, y_train, epochs=5, batch_size=64)
+
+# Evaluate Model
+loss, accuracy = model.evaluate(x_test, y_test)
+
+print("Accuracy :", accuracy)
+==========================================
+11.import numpy as np
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+import random
+
+# Sample song lyrics dataset
+text = """
+hello from the other side
+i must have called a thousand times
+to tell you i am sorry for everything that i have done
+
+we will we will rock you
+buddy you are a boy make a big noise
+playing in the street gonna be a big man someday
+
+let it be let it be
+whisper words of wisdom let it be
+
+here comes the sun
+and i say it is all right
+""".lower()
+
+# Remove newline characters
+text = text.replace("\n", " ")
+
+# Character mapping
+chars = sorted(list(set(text)))
+char_to_idx = {c: i for i, c in enumerate(chars)}
+idx_to_char = {i: c for i, c in enumerate(chars)}
+
+print("Total characters in corpus:", len(text))
+print("Unique characters:", len(chars))
+
+# Sequence preparation
+seq_length = 40
+step = 3
+
+input_sequences = []
+target_chars = []
+
+for i in range(0, len(text) - seq_length, step):
+    seq = text[i:i + seq_length]
+    target = text[i + seq_length]
+
+    input_sequences.append(seq)
+    target_chars.append(target)
+
+print("Number of sequences:", len(input_sequences))
+
+# One-hot encoding
+X = np.zeros((len(input_sequences), seq_length, len(chars)), dtype=np.float32)
+y = np.zeros((len(input_sequences), len(chars)), dtype=np.float32)
+
+for i, seq in enumerate(input_sequences):
+    for t, ch in enumerate(seq):
+        X[i, t, char_to_idx[ch]] = 1.0
+
+    y[i, char_to_idx[target_chars[i]]] = 1.0
+
+# Build RNN model using LSTM
+model = Sequential([
+    LSTM(128, input_shape=(seq_length, len(chars))),
+    Dense(len(chars), activation="softmax")
+])
+
+# Compile model
+model.compile(
+    loss="categorical_crossentropy",
+    optimizer="adam"
+)
+
+# Model summary
+model.summary()
+
+# Train model
+model.fit(
+    X,
+    y,
+    batch_size=32,
+    epochs=50,
+    verbose=1
+)
+
+# Function for temperature sampling
+def sample_with_temperature(preds, temperature=1.0):
+
+    preds = np.asarray(preds).astype("float64")
+
+    preds = np.log(preds + 1e-8) / temperature
+
+    exp_preds = np.exp(preds)
+
+    preds = exp_preds / np.sum(exp_preds)
+
+    return np.random.choice(len(preds), p=preds)
+
+# Generate lyrics
+start_index = random.randint(0, len(input_sequences) - 1)
+
+seed_text = input_sequences[start_index]
+
+generated = seed_text
+
+print("\nSeed text:")
+print(seed_text)
+
+for _ in range(300):
+
+    x_pred = np.zeros((1, seq_length, len(chars)), dtype=np.float32)
+
+    for t, ch in enumerate(seed_text):
+        x_pred[0, t, char_to_idx[ch]] = 1.0
+
+    preds = model.predict(x_pred, verbose=0)[0]
+
+    next_index = sample_with_temperature(
+        preds,
+        temperature=0.8
+    )
+
+    next_char = idx_to_char[next_index]
+
+    generated += next_char
+
+    seed_text = seed_text[1:] + next_char
+
+# Output generated lyrics
+print("\nGenerated Lyrics:\n")
+print(generated)
+===================================================================
+12.import numpy as np
+import tensorflow as tf
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, Bidirectional, LSTM, Dense
+
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+# Questions and Responses
+questions = ["hi", "how are you", "bye"]
+
+responses = ["hello", "i am fine", "goodbye"]
+
+# Tokenizer
+tokenizer = Tokenizer()
+
+tokenizer.fit_on_texts(questions)
+
+# Convert Questions to Sequences
+x = tokenizer.texts_to_sequences(questions)
+
+x = pad_sequences(x)
+
+# Output Labels
+y = np.array([0,1,2])
+
+# Create Model
+model = Sequential([
+
+    Embedding(input_dim=20, output_dim=8, input_length=x.shape[1]),
+
+    Bidirectional(LSTM(units=8)),
+
+    Dense(units=3, activation='softmax')
+
+])
+
+# Compile Model
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+
+# Train Model
+model.fit(x, y, epochs=100, verbose=0)
+
+# Evaluate Model
+loss, accuracy = model.evaluate(x, y)
+
+print("Accuracy :", accuracy)
+
+# Chatbot Testing
+while True:
+
+    text = input("You : ")
+
+    if text.lower() == "exit":
+        break
+
+    test = tokenizer.texts_to_sequences([text])
+
+    test = pad_sequences(test, maxlen=x.shape[1])
+
+    pred = model.predict(test, verbose=0)
+
+    print("Bot :", responses[np.argmax(pred)])
